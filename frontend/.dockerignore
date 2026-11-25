@@ -1,0 +1,29 @@
+# Dependências
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Build (o Docker gera o seu próprio)
+dist/
+dist-ssr/
+
+# Ambiente e segredos
+.env
+.env.*
+!.env.example
+
+# Versionamento e IDEs
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+
+# Arquivos do próprio Docker (evita invalidar o cache)
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Markdown
+*.md
+!README.md
