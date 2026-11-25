@@ -66,3 +66,59 @@ Para usar fotos reais, substitua os arquivos mantendo o mesmo nome ou atualize o
 
 Backend Node.js, banco de dados, autenticação, reservas com expiração, integração Pix com webhooks,
 painel administrativo real e validação legal da modalidade da campanha.
+
+## Docker / Deploy
+
+O projeto é 100% estático (build Vite servido por Nginx), sem variáveis de ambiente em runtime.
+
+### Arquivos
+
+| Arquivo | Função |
+| --- | --- |
+| `frontend/Dockerfile` | Multi-stage: `node:22-alpine` (build) → `nginx:alpine` (serve) |
+| `frontend/.dockerignore` | Exclui `node_modules`, `dist`, `.git`, `.env` do contexto |
+| `frontend/nginx.conf` | SPA fallback, gzip, cache de assets e cabeçalhos de segurança |
+| `docker-compose.yml` | Serviço `time-da-base-frontend` publicado em `5180:80` |
+
+### Subir no servidor
+
+```bash
+git clone <repo> time-da-base && cd time-da-base
+docker compose up -d --build
+docker compose ps
+curl -I http://127.0.0.1:5180/
+```
+
+A aplicação fica disponível em `http://<ip-do-servidor>:5180`.
+
+### Atualizar após mudanças
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+### Cloudflare (subdomínio `rifa.calangoapp.com.br`)
+
+Com o túnel `cloudflared` já rodando no servidor, adicione um **Public Hostname** no
+Cloudflare Zero Trust → Networks → Tunnels:
+
+| Campo | Valor |
+| --- | --- |
+| Subdomain | `rifa` |
+| Domain | `calangoapp.com.br` |
+| Service | `http://<ip-do-servidor>:5180` |
+
+Alternativa: como o container entra na rede externa `squamata-global`, é possível apontar o
+túnel para `http://time-da-base-frontend:80` caso o `cloudflared` também esteja nessa rede.
+
+> A rede `squamata-global` precisa existir no servidor (`docker network create squamata-global`).
+> Se preferir não usá-la, remova o bloco `networks` do `docker-compose.yml`.
+
+### Teste local
+
+```bash
+docker compose up -d --build
+curl -I http://localhost:5180/          # 200
+curl -I http://localhost:5180/admin     # 200 (SPA fallback)
+```
